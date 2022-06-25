@@ -1030,10 +1030,13 @@ function ScreensObj_InitVod() {
     ScreenObj[key].Set_Scroll();
 }
 
+/*vod*/
 function ScreensObj_InitChannelVod() {
     var key = Main_ChannelVod;
 
     ScreenObj[key] = Screens_assign({
+        useHelix: true,
+        UseToken: true,
         periodMaxPos: 2,
         HeadersArray: Main_base_array_header,
         key_pgDown: Main_ChannelClip,
@@ -1048,12 +1051,9 @@ function ScreensObj_InitChannelVod() {
         highlightSTR: 'ChannelVod_highlight',
         highlight: Main_getItemBool('ChannelVod_highlight', false),
         periodPos: Main_getItemInt('ChannelVod_periodPos', 1),
-        base_url: Main_kraken_api + 'channels/',
+        base_url: Main_helix_api + 'videos',
         set_url: function() {
-            this.url = this.base_url +
-                encodeURIComponent(Main_values.Main_selectedChannel_id) + '/videos?limit=' + Main_ItemsLimitMax +
-                '&broadcast_type=' + (this.highlight ? 'highlight' : 'archive') + '&sort=' +
-                this.time[this.periodPos - 1] + '&offset=' + (this.offset + this.extraoffset);
+            this.url = this.base_url + '?user_id=' + Main_values.Main_selectedChannel_id + '&type=archive';
         },
         key_play: function(click) {
 
@@ -1332,6 +1332,8 @@ function ScreensObj_InitSearchLive() {
     ScreenObj[key].Set_Scroll();
 }
 
+
+/*workig*/
 function ScreensObj_InitUserLive() {
     var key = Main_UserLive;
 
@@ -1729,29 +1731,30 @@ function ScreensObj_InitSearchGames() {
     ScreenObj[key].Set_Scroll();
 }
 
+/*not*/
 function ScreensObj_InitUserChannels() {
     var key = Main_UserChannels;
 
     ScreenObj[key] = Screens_assign({
-        HeadersArray: Main_base_array_header,
+        useHelix: true,
+        UseToken: true,
+        //HeadersArray: Main_base_array_header,
         ids: Screens_ScreenIds('UserChannels', key),
         ScreenName: 'UserChannels',
         table: 'stream_table_user_channels',
         screen: key,
-        object: 'follows',
+        object: 'data',
         IsUser: true,
         key_pgDown: Main_History[Main_HistoryPos],
         key_pgUp: Main_UserVod,
         key_pgUpNext: Main_usergames,
-        base_url: Main_kraken_api + 'users/',
+        base_url: Main_helix_api + 'users/',
         set_url: function() {
-            if (this.offset && (this.offset + Main_ItemsLimitMax) > this.MaxOffset) this.dataEnded = true;
-            this.url = this.base_url + encodeURIComponent(AddUser_UsernameArray[0].id) +
-                '/follows/channels?limit=' + Main_ItemsLimitMax + '&offset=' + this.offset + '&sortby=login&direction=asc';
+            this.url = this.base_url + 'follows?from_id=' + AddUser_UsernameArray[0].id + '&first=' + Main_ItemsLimitMax +
+                (this.cursor ? '&after=' + this.cursor : '');
         },
         label_init: function() {
             ScreensObj_TopLableUserInit(this.screen);
-
             ScreensObj_SetTopLable(STR_USER, STR_USER_CHANNEL);
         },
         key_play: function() {
@@ -1762,8 +1765,30 @@ function ScreensObj_InitUserChannels() {
 
         },
         addCell: function(cell) {
-            cell = cell.channel;
-            this.addCellTemp(cell);
+            //to_id, to_name
+            //cell = cell.channel;
+            //this.addCellTemp(cell);
+
+            chn = {
+                _id: this.itemsCount,
+                id: cell.to_id,
+                user_id: cell.to_id,
+                title: cell.to_name,
+                language: 'EN'
+            }
+
+            this.itemsCount++;
+            this.idObject[chn._id] = 1;
+
+            this.tempHtml +=
+                Screens_createCellVod(
+                    this.row_id + '_' + this.coloumn_id,
+                    this.ids,
+                    ScreensObj_LiveCellArray(chn, true), //logo
+                    this.screen
+                );
+
+            this.coloumn_id++;
         }
     }, Base_obj);
 

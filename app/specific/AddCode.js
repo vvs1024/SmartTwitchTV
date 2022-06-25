@@ -761,12 +761,13 @@ function AddCode_CheckSubSucessFail() {
     PlayVod_NotSub();
 }
 
-var AddCode_redirect_uri = 'https://fgl27.github.io/SmartTwitchTV/release/index.html';
+var AddCode_redirect_uri = 'http://localhost:8080/index.html';
 //Get yours app register to get tokens at https://dev.twitch.tv/console
-var AddCode_clientId = "5seja5ptej058mxqy7gh5tcudjqtm9";//public but get yours link above is free
+var AddCode_clientId = "05xojqihn5hlx0i6yavjo206ql8zpz";//public but get yours link above is free
 //none public get yours link above is free
-var AddCode_main_token;
-var AddCode_client_token;
+//secret: lmkt1rfgpy0t5qbsie9j5x11y5npyx
+var AddCode_main_token = "lmkt1rfgpy0t5qbsie9j5x11y5npyx"; //not sure
+var AddCode_client_token = "lmkt1rfgpy0t5qbsie9j5x11y5npyx";
 var AddCode_backup_client_id;
 
 var AddCode_UrlToken = 'https://id.twitch.tv/oauth2/token?';
