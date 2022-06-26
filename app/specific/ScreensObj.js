@@ -523,22 +523,52 @@ function ScreensObj_StartAllVars() {
         Vod_newImg: new Image(),
         AnimateThumb: ScreensObj_AnimateThumbId,
         addCell: function(cell) {
-            if (!this.idObject[cell._id]) {
+            var idValue = this.useHelix ? cell.id : cell.tracking_id;
 
+            if (!this.idObject[idValue]) {
                 this.itemsCount++;
-                this.idObject[cell._id] = 1;
+                this.idObject[idValue] = 1;
 
                 this.tempHtml +=
                     Screens_createCellVod(
                         this.row_id + '_' + this.coloumn_id,
                         this.ids,
-                        ScreensObj_VodCellArray(cell),
+                        ScreensObj_VodCellArray(cell, this.useHelix),
                         this.screen
                     );
 
                 this.coloumn_id++;
             }
-        }
+        },
+        key_play: function() {
+
+            if (this.is_a_Banner()) return;
+
+            if (this.posY === -1) {
+
+                if (!this.loadingData) {
+
+                    if (!this.posX) {
+
+                        Screens_PeriodStart(this.screen);
+                        return;
+
+                    } else if (!this.DataObj['0_0'].image) {
+
+                        PlayClip_All = true;
+                        Screens_removeFocusFollow(this.screen);
+                        this.posX = 0;
+                        this.posY = 0;
+
+                    } else {
+                        return;
+                    }
+
+                } else return;
+            }
+
+            this.OpenVodStart();
+        },
     };
 
     Base_Live_obj = {
@@ -1036,11 +1066,11 @@ function ScreensObj_InitChannelVod() {
 
     ScreenObj[key] = Screens_assign({
         useHelix: true,
-        UseToken: true,
+        UseToken: true,//?
         periodMaxPos: 2,
         HeadersArray: Main_base_array_header,
         key_pgDown: Main_ChannelClip,
-        object: 'videos',
+        object: 'data',
         ids: Screens_ScreenIds('ChannelVod', key),
         ScreenName: 'ChannelVod',
         table: 'stream_table_channel_vod',
@@ -1195,9 +1225,10 @@ function ScreensObj_InitUserVod() {
     var key = Main_UserVod;
 
     ScreenObj[key] = Screens_assign({
+        useHelix: true,
         periodMaxPos: 2,
         UseToken: true,
-        object: 'videos',
+        object: 'data',
         key_pgDown: Main_UserChannels,
         key_pgUp: Main_usergames,
         ids: Screens_ScreenIds('UserVod', key),
@@ -1209,7 +1240,7 @@ function ScreensObj_InitUserVod() {
         highlightSTR: 'UserVod_highlight',
         highlight: Main_getItemBool('UserVod_highlight', false),
         periodPos: Main_getItemInt('UserVod_periodPos', 1),
-        base_url: Main_kraken_api + 'videos/followed?limit=' + Main_ItemsLimitMax,
+        base_url: Main_helix_api + 'videos/followed?limit=' + Main_ItemsLimitMax,//todo
         set_url: function() {
             this.token = Main_OAuth + AddUser_UsernameArray[0].access_token;
             Main_Headers[2][1] = this.token;
@@ -1332,8 +1363,6 @@ function ScreensObj_InitSearchLive() {
     ScreenObj[key].Set_Scroll();
 }
 
-
-/*workig*/
 function ScreensObj_InitUserLive() {
     var key = Main_UserLive;
 
@@ -1525,6 +1554,7 @@ function ScreensObj_InitClip() {
     ScreenObj[key].Set_Scroll();
 }
 
+/*clip*/
 function ScreensObj_InitChannelClip() {
     var key = Main_ChannelClip;
 
@@ -2333,25 +2363,47 @@ function ScreensObj_LiveCellArray(cell, useHelix, logo, partner) {
     ];
 }
 
-function ScreensObj_VodCellArray(cell) {
+function ScreensObj_VodCellArray(cell, useHelix) {
+/*cell*/
+/*
+{
+            "id": "1512674148",
+            "stream_id": "39434005959",
+            "user_id": "49207184",
+            "user_login": "fps_shaka",
+            "user_name": "fps_shaka",
+            "title": "【提供】Apex覚醒コレクションイベントyaruzo",
+            "description": "",
+            "created_at": "2022-06-24T10:01:20Z",
+            "published_at": "2022-06-24T10:01:20Z",
+            "url": "https://www.twitch.tv/videos/1512674148",
+            "thumbnail_url": "https://static-cdn.jtvnw.net/cf_vods/d3vd9lfkzbru3h/36eab7d5e03ffea54cae_fps_shaka_39434005959_1656064875//thumb/thumb0-%{width}x%{height}.jpg",
+            "viewable": "public",
+            "view_count": 314696,
+            "language": "ja",
+            "type": "archive",
+            "duration": "3h57m34s",
+            "muted_segments": null
+        },
+*/
     return [
-        ScreensObj_VodGetPreview(cell.preview.template, cell.animated_preview_url),//0
-        cell.channel.display_name,//1
+        ScreensObj_VodGetPreview(cell.thumbnail_url, cell.thumbnail_url),//0
+        cell.user_name,//1
         Main_videoCreatedAt(cell.created_at),//2
         cell.game,//3
-        Main_addCommas(cell.views),//4
-        cell.resolutions.chunked ? Main_videoqualitylang(cell.resolutions.chunked.slice(-4), (parseInt(cell.fps.chunked) || 0), cell.channel.broadcaster_language) : '',//5
-        cell.channel.name,//6
-        cell._id.substr(1),//7
-        cell.animated_preview_url,//8
-        cell.channel.broadcaster_language,//9
+        Main_addCommas(cell.view_count),//4
+        '',//cell.resolutions.chunked ? Main_videoqualitylang(cell.resolutions.chunked.slice(-4), (parseInt(cell.fps.chunked) || 0), cell.channel.broadcaster_language) : '',//5
+        cell.user_login,//6
+        cell.id.substr(1),//7
+        cell.thumbnail_url,//8
+        cell.language,//9
         twemoji.parse(cell.title),//10
-        cell.length,//11
+        cell.duration,//11
         cell.created_at,//12
         cell.views,//13
-        cell.channel._id,//14
-        cell.channel.logo,//15
-        cell.channel.partner//16
+        cell.id,//14
+        null,//15
+        null//16
     ];
 }
 
